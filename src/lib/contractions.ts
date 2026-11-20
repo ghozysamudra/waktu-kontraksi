@@ -1,3 +1,5 @@
+import type { Language } from './translations';
+
 export const storageKey = 'waktu-kontraksi.v1';
 
 export type Contraction = {
@@ -44,13 +46,14 @@ export function formatElapsed(milliseconds: number): string {
   return parts.map((part) => String(part).padStart(2, '0')).join(':');
 }
 
-export function formatDuration(milliseconds: number): string {
+export function formatDuration(milliseconds: number, language: Language): string {
   const seconds = Math.round(Math.max(0, milliseconds) / 1000);
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor(seconds / 60) % 60;
   const remainingSeconds = seconds % 60;
+  const [hour, minute, second] = language === 'en' ? ['hr', 'min', 'sec'] : ['jam', 'mnt', 'dtk'];
 
-  if (hours) return `${hours} jam ${minutes} mnt`;
-  if (minutes) return `${minutes} mnt ${remainingSeconds} dtk`;
-  return `${seconds} dtk`;
+  if (hours) return `${hours} ${hour} ${minutes} ${minute}`;
+  if (minutes) return `${minutes} ${minute} ${remainingSeconds} ${second}`;
+  return `${seconds} ${second}`;
 }

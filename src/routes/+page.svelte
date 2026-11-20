@@ -3,7 +3,6 @@
   import BookOpen from '@lucide/svelte/icons/book-open';
   import ChartNoAxesColumn from '@lucide/svelte/icons/chart-no-axes-column';
   import Clock3 from '@lucide/svelte/icons/clock-3';
-  import HeartPulse from '@lucide/svelte/icons/heart-pulse';
   import History from '@lucide/svelte/icons/history';
   import Hourglass from '@lucide/svelte/icons/hourglass';
   import LockKeyhole from '@lucide/svelte/icons/lock-keyhole';
@@ -15,26 +14,35 @@
   import '@fontsource-variable/dm-sans/wght.css';
   import '@fontsource-variable/lora/wght.css';
 
-  import favicon from '../../assets/icon.svg';
+  import logo from '../../assets/logo.png';
   import sprig from '../lib/sprig.webp';
   import { formatDuration, formatElapsed, readSession, storageKey, type Session } from '../lib/contractions';
+
+  import { translations, type Language } from '../lib/translations';
+
+  const languageKey = 'waktu-kontraksi.language';
+  let language = $state<Language>('id');
+  let copy = $derived(translations[language]);
+  let nextLanguage: Language = $derived(language === 'id' ? 'en' : 'id');
+  const languageLabels = { id: 'ID – Bahasa Indonesia', en: 'EN – English' };
 
   let session = $state.raw<Session>({ activeStart: null, records: [] });
   let ready = $state(false);
   let storageUnavailable = $state(false);
   let now = $state(0);
-  let message = $state('');
+  let message = $state<keyof typeof copy.feedback | null>(null);
   let guideDialog: HTMLDialogElement;
   let deleteDialog: HTMLDialogElement;
   let historyTitle: HTMLHeadingElement;
   let deleteTarget = $state<number | 'all'>('all');
 
-  const dateFormat = new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' });
-  const timeFormat = new Intl.DateTimeFormat('id-ID', {
+  let locale = $derived(language === 'id' ? 'id-ID' : 'en-GB');
+  let dateFormat = $derived(new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }));
+  let timeFormat = $derived(new Intl.DateTimeFormat(locale, {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit'
-  });
+  }));
 
   let records = $derived(session.records);
   let running = $derived(session.activeStart !== null);
@@ -59,7 +67,25 @@
     now = Date.now();
   }
 
+  function switchLanguage() {
+    language = nextLanguage;
+    try {
+      localStorage.setItem(languageKey, language);
+    } catch {
+      // The selection still applies while this page is open.
+    }
+  }
+
+  $effect(() => {
+    document.documentElement.lang = language;
+  });
+
   onMount(() => {
+    try {
+      if (localStorage.getItem(languageKey) === 'en') language = 'en';
+    } catch {
+      // Keep the default when the browser blocks access to storage.
+    }
     syncStorage();
     ready = true;
 
@@ -103,7 +129,7 @@
     if (visibleStart === null) {
       const lastStart = session.records[0]?.startedAt ?? 0;
       save({ ...session, activeStart: Math.max(now, lastStart + 1) });
-      message = '';
+      message = null;
       return;
     }
 
@@ -112,7 +138,7 @@
       activeStart: null,
       records: [{ startedAt: visibleStart, endedAt }, ...session.records]
     });
-    message = storageUnavailable ? 'Kontraksi dicatat untuk sementara.' : 'Kontraksi berhasil disimpan.';
+    message = storageUnavailable ? 'temporary' : 'saved';
   }
 
   function cancelTimer() {
@@ -120,7 +146,7 @@
     syncStorage();
     if (visibleStart === null || session.activeStart !== visibleStart) return;
     save({ ...session, activeStart: null });
-    message = 'Pencatatan dibatalkan.';
+    message = 'cancelled';
   }
 
   function askDelete(target: number | 'all') {
@@ -141,8 +167,8 @@
         : session.records.filter((record) => record.startedAt !== deleteTarget)
     });
     message = storageUnavailable
-      ? 'Perubahan hanya berlaku di halaman ini.'
-      : deleteTarget === 'all' ? 'Riwayat dihapus.' : 'Catatan dihapus.';
+      ? 'unsaved'
+      : deleteTarget === 'all' ? 'cleared' : 'deleted';
 
     await tick();
     if (document.activeElement === document.body) historyTitle.focus();
@@ -150,28 +176,40 @@
 </script>
 
 <svelte:head>
-  <title>Waktu Kontraksi</title>
-  <meta name="description" content="Catat durasi dan jarak antar kontraksi dengan timer yang menyimpan riwayat di browser Anda." />
-  <link rel="icon" type="image/svg+xml" href={favicon} />
+  <title>{copy.title}</title>
+  <meta name="description" content={copy.description} />
+  <link rel="icon" type="image/png" sizes="96x96" href={logo} />
 </svelte:head>
 
 <header class="site-header">
   <div class="shell header-inner">
     <div class="brand">
-      <span class="brand-icon"><HeartPulse size={21} strokeWidth={1.7} aria-hidden="true" /></span>
-      <span>Waktu Kontraksi</span>
+      <img class="brand-logo" src={logo} width="44" height="44" alt="" />
+      <span lang="id">Waktu Kontraksi</span>
     </div>
-    <button type="button" class="header-button" onclick={() => guideDialog.showModal()}>
-      <BookOpen size={17} strokeWidth={1.7} aria-hidden="true" />
-      Panduan
-    </button>
+    <div class="header-actions">
+      <button type="button" class="header-button" onclick={() => guideDialog.showModal()}>
+        <BookOpen size={17} strokeWidth={1.7} aria-hidden="true" />
+        {copy.guide}
+      </button>
+      <button
+        type="button"
+        class="header-button language-button"
+        lang={nextLanguage}
+        aria-label={languageLabels[nextLanguage]}
+        title={languageLabels[nextLanguage]}
+        onclick={switchLanguage}
+      >
+        {nextLanguage.toUpperCase()}
+      </button>
+    </div>
   </div>
 </header>
 
 <main class="shell">
   <div class="intro">
-    <h1>Timer Kontraksi</h1>
-    <p>Catat durasi dan jarak kontraksi dengan satu sentuhan.</p>
+    <h1>{copy.heading}</h1>
+    <p>{copy.intro}</p>
   </div>
 
   <div class="dashboard">
@@ -179,46 +217,46 @@
       <div class="card-heading timer-heading">
         <div class="heading-label">
           <span class="icon-tile rose"><Timer size={20} strokeWidth={1.7} aria-hidden="true" /></span>
-          <h2 id="timer-title">Pencatat waktu</h2>
+          <h2 id="timer-title">{copy.timer}</h2>
         </div>
         <span class="state-pill" class:running role="status">
           <span class="state-dot" aria-hidden="true"></span>
-          {running ? 'Mencatat' : 'Siap'}
+          {running ? copy.recording : copy.ready}
         </span>
       </div>
 
       <div class="timer-face" class:running>
         <div class="timer-dial">
           <Timer size={22} strokeWidth={1.45} aria-hidden="true" />
-          <div class="clock" class:long-clock={elapsed >= 3_600_000} role="timer" aria-label="Durasi kontraksi" aria-describedby="clock-units">
+          <div class="clock" class:long-clock={elapsed >= 3_600_000} role="timer" aria-label={copy.timerLabel} aria-describedby="clock-units">
             {formatElapsed(elapsed)}
           </div>
-          <span class="clock-label" id="clock-units">{elapsed >= 3_600_000 ? 'Jam · Menit · Detik' : 'Menit · Detik'}</span>
+          <span class="clock-label" id="clock-units">{elapsed >= 3_600_000 ? copy.longClockLabel : copy.shortClockLabel}</span>
         </div>
       </div>
 
       <button class="primary timer-action" class:running type="button" onclick={toggleTimer} disabled={!ready}>
         {#if running}
           <Square size={15} fill="currentColor" aria-hidden="true" />
-          Selesai Kontraksi
+          {copy.stop}
         {:else}
           <Play size={17} fill="currentColor" aria-hidden="true" />
-          Mulai Kontraksi
+          {copy.start}
         {/if}
       </button>
 
       <p class="timer-hint">
-        {running ? 'Ketuk saat kontraksi berakhir.' : 'Ketuk saat kontraksi mulai terasa.'}
+        {running ? copy.stopHint : copy.startHint}
       </p>
       <div class="timer-feedback">
         {#if running}
-          <button class="text-button" type="button" onclick={cancelTimer}>Batalkan timer</button>
+          <button class="text-button" type="button" onclick={cancelTimer}>{copy.cancelTimer}</button>
         {:else}
-          <span role="status">{message}</span>
+          <span role="status">{message ? copy.feedback[message] : ''}</span>
         {/if}
       </div>
       {#if storageUnavailable}
-        <p class="storage-error" role="alert">Penyimpanan browser tidak tersedia. Perubahan bisa hilang saat halaman ditutup.</p>
+        <p class="storage-error" role="alert">{copy.storageError}</p>
       {/if}
     </section>
 
@@ -227,22 +265,22 @@
         <div class="card-heading">
           <div class="heading-label">
             <span class="icon-tile sage"><ChartNoAxesColumn size={20} strokeWidth={1.7} aria-hidden="true" /></span>
-            <h2 id="summary-title">Ringkasan</h2>
+            <h2 id="summary-title">{copy.summary}</h2>
           </div>
         </div>
 
         <dl class="stats">
           <div>
-            <dt><History size={17} aria-hidden="true" /> Total kontraksi</dt>
-            <dd>{records.length}<span>kali</span></dd>
+            <dt><History size={17} aria-hidden="true" /> {copy.total}</dt>
+            <dd>{records.length}{#if copy.totalUnit}<span>{copy.totalUnit}</span>{/if}</dd>
           </div>
           <div>
-            <dt><Hourglass size={17} aria-hidden="true" /> Rata-rata durasi</dt>
-            <dd>{average === null ? '—' : formatDuration(average)}</dd>
+            <dt><Hourglass size={17} aria-hidden="true" /> {copy.average}</dt>
+            <dd>{average === null ? '—' : formatDuration(average, language)}</dd>
           </div>
           <div>
-            <dt><Clock3 size={17} aria-hidden="true" /> Jarak terakhir</dt>
-            <dd>{latestInterval === null ? '—' : formatDuration(latestInterval)}</dd>
+            <dt><Clock3 size={17} aria-hidden="true" /> {copy.latestInterval}</dt>
+            <dd>{latestInterval === null ? '—' : formatDuration(latestInterval, language)}</dd>
           </div>
         </dl>
       </section>
@@ -251,10 +289,10 @@
         <img class="sprig" src={sprig} width="300" height="450" alt="" />
         <div class="guide-copy">
           <BookOpen size={20} strokeWidth={1.7} aria-hidden="true" />
-          <h2 id="guide-card-title">Kenali polanya</h2>
-          <p>Pahami cara membaca durasi dan jarak kontraksi.</p>
+          <h2 id="guide-card-title">{copy.guideCardTitle}</h2>
+          <p>{copy.guideCardText}</p>
           <button type="button" class="guide-button" onclick={() => guideDialog.showModal()}>
-            Buka panduan
+            {copy.openGuide}
           </button>
         </div>
       </section>
@@ -265,22 +303,22 @@
     <div class="card-heading history-heading">
       <div class="heading-label">
         <span class="icon-tile rose"><History size={20} strokeWidth={1.7} aria-hidden="true" /></span>
-        <h2 bind:this={historyTitle} tabindex="-1" id="history-title">Riwayat kontraksi</h2>
+        <h2 bind:this={historyTitle} tabindex="-1" id="history-title">{copy.history}</h2>
       </div>
       {#if records.length}
-        <button class="text-button delete-all" type="button" onclick={() => askDelete('all')}>Hapus semua</button>
+        <button class="text-button delete-all" type="button" onclick={() => askDelete('all')}>{copy.clearHistory}</button>
       {/if}
     </div>
 
     {#if records.length}
-      <p class="history-note" id="history-note">Jarak dihitung dari awal satu kontraksi ke awal kontraksi berikutnya.</p>
+      <p class="history-note" id="history-note">{copy.intervalDefinition}</p>
       <table aria-labelledby="history-title" aria-describedby="history-note">
         <thead>
           <tr>
-            <th scope="col">Mulai</th>
-            <th scope="col">Durasi</th>
-            <th scope="col">Jarak</th>
-            <th scope="col"><span class="sr-only">Tindakan</span></th>
+            <th scope="col">{copy.startedAt}</th>
+            <th scope="col">{copy.duration}</th>
+            <th scope="col">{copy.interval}</th>
+            <th scope="col"><span class="sr-only">{copy.actions}</span></th>
           </tr>
         </thead>
         <tbody>
@@ -293,13 +331,13 @@
                   <span class="record-date">{dateFormat.format(record.startedAt)}</span>
                 </time>
               </td>
-              <td>{formatDuration(record.endedAt - record.startedAt)}</td>
-              <td>{previous ? formatDuration(record.startedAt - previous.startedAt) : '—'}</td>
+              <td>{formatDuration(record.endedAt - record.startedAt, language)}</td>
+              <td>{previous ? formatDuration(record.startedAt - previous.startedAt, language) : '—'}</td>
               <td>
                 <button
                   type="button"
                   class="icon-button"
-                  aria-label={`Hapus catatan ${dateFormat.format(record.startedAt)} pukul ${timeFormat.format(record.startedAt)}`}
+                  aria-label={copy.deleteRecordLabel(dateFormat.format(record.startedAt), timeFormat.format(record.startedAt))}
                   onclick={() => askDelete(record.startedAt)}
                 >
                   <Trash2 size={17} strokeWidth={1.65} aria-hidden="true" />
@@ -312,54 +350,54 @@
     {:else}
       <div class="empty-history">
         <span class="empty-icon"><Clock3 size={22} strokeWidth={1.5} aria-hidden="true" /></span>
-        <p><strong>Belum ada catatan</strong></p>
-        <p>Kontraksi yang selesai dicatat akan muncul di sini.</p>
+        <p><strong>{copy.emptyHistory}</strong></p>
+        <p>{copy.emptyHint}</p>
       </div>
     {/if}
   </section>
 
   <footer class="page-footer">
     <LockKeyhole size={15} aria-hidden="true" />
-    <span>Catatan hanya disimpan di browser ini.</span>
+    <span>{copy.privacy}</span>
   </footer>
 </main>
 
 <dialog bind:this={guideDialog} aria-labelledby="guide-title">
   <div class="dialog-heading">
-    <h2 id="guide-title">Panduan kontraksi</h2>
+    <h2 id="guide-title">{copy.guideTitle}</h2>
     <form method="dialog">
-      <button type="submit" class="icon-button" aria-label="Tutup panduan">
+      <button type="submit" class="icon-button" aria-label={copy.closeGuide}>
         <X size={22} aria-hidden="true" />
       </button>
     </form>
   </div>
   <dl class="guide-definitions">
     <div>
-      <dt>Durasi</dt>
-      <dd>Waktu dari awal sampai akhir satu kontraksi.</dd>
+      <dt>{copy.duration}</dt>
+      <dd>{copy.durationDefinition}</dd>
     </div>
     <div>
-      <dt>Jarak</dt>
-      <dd>Waktu dari awal satu kontraksi ke awal kontraksi berikutnya.</dd>
+      <dt>{copy.interval}</dt>
+      <dd>{copy.intervalDefinition}</dd>
     </div>
   </dl>
-  <h3>Membaca pola waktu</h3>
-  <p>Pola 5–1–1 berarti kontraksi datang setiap 5 menit, berlangsung sekitar 1 menit, dan berulang selama 1 jam. Pada pola 3–1–1 dan 2–1–1, jaraknya masing-masing 3 dan 2 menit.</p>
-  <p>Fase persalinan dan bukaan perlu dinilai oleh tenaga kesehatan.</p>
+  <h3>{copy.patternsTitle}</h3>
+  <p>{copy.patterns}</p>
+  <p>{copy.assessment}</p>
   <div class="care-note">
-    <h3>Kapan menghubungi bidan atau dokter?</h3>
-    <p>Hubungi bidan atau fasilitas bersalin jika Anda merasa persalinan sudah mulai atau kontraksi teratur setiap 5 menit atau lebih sering.</p>
-    <p><strong>Segera hubungi mereka</strong> jika air ketuban pecah, terjadi perdarahan dari vagina, atau gerakan bayi berkurang.</p>
-    <a href="https://www.nhs.uk/pregnancy/labour-and-birth/signs-that-labour-has-begun/" target="_blank" rel="noreferrer">Sumber panduan kesehatan (NHS)</a>
+    <h3>{copy.careTitle}</h3>
+    <p>{copy.care}</p>
+    <p><strong>{copy.urgentCareLead}</strong> {copy.urgentCare}</p>
+    <a href="https://www.nhs.uk/pregnancy/labour-and-birth/signs-that-labour-has-begun/" target="_blank" rel="noreferrer">{copy.source}</a>
   </div>
 </dialog>
 
 <dialog bind:this={deleteDialog} onclose={handleDelete} aria-labelledby="delete-title" aria-describedby="delete-description">
-  <h2 id="delete-title">{deleteTarget === 'all' ? 'Hapus semua riwayat?' : 'Hapus catatan ini?'}</h2>
-  <p id="delete-description">Catatan yang dihapus akan hilang dari browser ini.</p>
+  <h2 id="delete-title">{deleteTarget === 'all' ? copy.confirmClear : copy.confirmDelete}</h2>
+  <p id="delete-description">{copy.deleteDescription}</p>
   <form class="dialog-actions" method="dialog">
-    <button class="secondary" type="submit" value="cancel">Batal</button>
-    <button class="primary" type="submit" value="delete">Hapus</button>
+    <button class="secondary" type="submit" value="cancel">{copy.cancel}</button>
+    <button class="primary" type="submit" value="delete">{copy.delete}</button>
   </form>
 </dialog>
 
@@ -454,7 +492,7 @@
     letter-spacing: -0.045em;
   }
 
-  .brand-icon, .icon-tile, .empty-icon {
+  .icon-tile, .empty-icon {
     display: grid;
     place-items: center;
     flex: none;
@@ -463,10 +501,18 @@
     border-radius: 0.8rem;
   }
 
-  .brand-icon {
-    background: var(--rose);
-    color: white;
+  .brand-logo {
+    flex: none;
+    display: block;
   }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .language-button { padding-inline: 0.6rem; }
 
   .header-button {
     border-color: var(--line);
