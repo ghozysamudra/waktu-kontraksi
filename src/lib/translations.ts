@@ -1,7 +1,15 @@
+export type FaqItem = {
+  question: string;
+  answer: string;
+};
+
 export const translations = {
   id: {
-    title: 'Waktu Kontraksi',
-    description: 'Catat durasi dan jarak antar kontraksi dengan timer yang menyimpan riwayat di browser Anda.',
+    title: 'Waktu Kontraksi — Timer Kontraksi Persalinan & Pola 5-1-1',
+    ogTitle: 'Waktu Kontraksi — Timer Kontraksi Persalinan',
+    ogImageAlt: 'Waktu Kontraksi — Timer kontraksi persalinan untuk mencatat durasi, jarak antar kontraksi, dan pola 5–1–1 di browser.',
+    appName: 'Waktu Kontraksi — Timer Kontraksi Persalinan',
+    description: 'Hitung durasi dan jarak antar kontraksi persalinan dengan satu sentuhan. Pahami pola 5-1-1 dan simpan riwayat kontraksi secara privat di browser Anda.',
     heading: 'Timer Kontraksi',
     intro: 'Catat durasi dan jarak kontraksi dengan satu sentuhan.',
     guide: 'Panduan',
@@ -47,6 +55,36 @@ export const translations = {
     urgentCareLead: 'Segera hubungi mereka',
     urgentCare: 'jika air ketuban pecah, terjadi perdarahan dari vagina, atau gerakan bayi berkurang.',
     source: 'Sumber panduan kesehatan (NHS)',
+    faqSectionTitle: 'Panduan & pertanyaan umum',
+    faqSectionIntro: 'Referensi ringkas untuk membantu Anda menghitung waktu kontraksi persalinan, membaca pola 5–1–1, dan mengetahui kapan perlu menghubungi tenaga kesehatan.',
+    faqItems: [
+      {
+        question: 'Bagaimana cara menghitung durasi dan jarak kontraksi?',
+        answer: 'Ketuk Mulai Kontraksi tepat saat perut mulai mengencang, lalu ketuk Selesai Kontraksi saat mereda untuk mencatat durasi. Jarak kontraksi dihitung otomatis dari waktu mulai satu kontraksi ke waktu mulai kontraksi berikutnya, bukan dari waktu jeda istirahatnya.'
+      },
+      {
+        question: 'Apa arti pola kontraksi 5–1–1, 3–1–1, dan 2–1–1?',
+        answer: 'Pola 5–1–1 berarti kontraksi datang teratur setiap 5 menit, berlangsung sekitar 1 menit, dan berulang selama minimal 1 jam. Pada pola 3–1–1 dan 2–1–1, jarak antar kontraksi semakin rapat menjadi setiap 3 menit dan 2 menit. Fase persalinan dan bukaan tetap perlu dinilai oleh bidan atau dokter.'
+      },
+      {
+        question: 'Apa perbedaan kontraksi palsu (Braxton Hicks) dan kontraksi persalinan?',
+        answer: 'Kontraksi palsu biasanya tidak teratur, tidak bertambah kuat, dan dapat mereda saat Anda beristirahat atau berganti posisi. Kontraksi persalinan asli cenderung semakin teratur, berlangsung lebih lama, terasa lebih kuat, dan jaraknya kian mendekat seiring waktu.'
+      },
+      {
+        question: 'Kapan harus menghubungi bidan, dokter, atau rumah sakit?',
+        answer: 'Hubungi bidan atau fasilitas bersalin jika Anda merasa persalinan sudah mulai atau kontraksi datang teratur setiap 5 menit atau lebih sering. Segera cari pertolongan medis jika air ketuban pecah, terjadi perdarahan dari vagina, atau gerakan bayi berkurang.'
+      },
+      {
+        question: 'Apakah riwayat kontraksi saya aman dan tersimpan saat halaman ditutup?',
+        answer: 'Ya. Semua catatan dan timer yang sedang berjalan hanya disimpan di localStorage browser pada perangkat Anda, tanpa dikirim ke server mana pun. Selama data situs browser tidak dihapus, riwayat akan pulih otomatis saat halaman dibuka kembali.'
+      }
+    ] satisfies FaqItem[],
+    featureList: [
+      'Pencatat durasi dan jarak antar kontraksi dengan satu sentuhan',
+      'Ringkasan total kontraksi, rata-rata durasi, dan jarak terakhir',
+      'Panduan pola kontraksi 5–1–1, 3–1–1, dan 2–1–1 berdasarkan NHS',
+      'Penyimpanan riwayat privat di localStorage browser tanpa akun'
+    ],
     confirmClear: 'Hapus semua riwayat?',
     confirmDelete: 'Hapus catatan ini?',
     deleteDescription: 'Catatan yang dihapus akan hilang dari browser ini.',
@@ -62,8 +100,11 @@ export const translations = {
     }
   },
   en: {
-    title: 'Contraction Timer',
-    description: 'Track contraction duration and intervals with a timer that saves your history in your browser.',
+    title: 'Contraction Timer — Track Labor Duration & 5-1-1 Rule',
+    ogTitle: 'Waktu Kontraksi — Labor Contraction Timer',
+    ogImageAlt: 'Waktu Kontraksi — Labor contraction timer to track contraction duration, intervals, and the 5–1–1 pattern privately in your browser.',
+    appName: 'Waktu Kontraksi — Labor Contraction Timer',
+    description: 'Track labor contraction duration and intervals with one tap. Understand the 5-1-1 pattern and keep your contraction history privately in your browser.',
     heading: 'Contraction Timer',
     intro: 'Track how long contractions last and how far apart they are.',
     guide: 'Guide',
@@ -109,6 +150,36 @@ export const translations = {
     urgentCareLead: 'Contact them straight away',
     urgentCare: 'if your waters break, you have vaginal bleeding, or your baby is moving less than usual.',
     source: 'Health guidance (NHS)',
+    faqSectionTitle: 'Contraction guide & FAQ',
+    faqSectionIntro: 'A quick reference for timing labor contractions, reading the 5–1–1 pattern, and knowing when to call your midwife or doctor.',
+    faqItems: [
+      {
+        question: 'How do you time contraction duration and intervals?',
+        answer: 'Tap Start Contraction as soon as a contraction begins and End Contraction when it fades to record its duration. The interval is calculated automatically from the start of one contraction to the start of the next—not the rest time in between.'
+      },
+      {
+        question: 'What do the 5–1–1, 3–1–1, and 2–1–1 contraction patterns mean?',
+        answer: 'A 5–1–1 pattern means contractions arrive every 5 minutes, last about 1 minute each, and stay consistent for at least 1 hour. In 3–1–1 and 2–1–1 patterns, contractions come every 3 or 2 minutes. Only a healthcare professional can assess the stage of labour and cervical dilation.'
+      },
+      {
+        question: 'How is false labor (Braxton Hicks) different from real labor contractions?',
+        answer: 'Braxton Hicks contractions are usually irregular, do not grow steadily stronger, and often ease when you rest or change position. True labor contractions become more regular, last longer, feel stronger, and move closer together over time.'
+      },
+      {
+        question: 'When should I contact my midwife, doctor, or maternity unit?',
+        answer: 'Contact your midwife or maternity unit if you think labour has started or your contractions are regular and 5 minutes apart or closer. Contact them straight away if your waters break, you have vaginal bleeding, or your baby is moving less than usual.'
+      },
+      {
+        question: 'Is my contraction history private and saved if I close the page?',
+        answer: 'Yes. Your active timer and contraction log are stored only in your browser localStorage and are never sent to a server. Reopening the page in the same browser restores your session as long as site data is kept.'
+      }
+    ] satisfies FaqItem[],
+    featureList: [
+      'One-tap labor contraction duration and interval timer',
+      'Live summary of total contractions, average duration, and latest interval',
+      '5–1–1, 3–1–1, and 2–1–1 contraction pattern guide referencing NHS guidance',
+      'Private browser-only localStorage persistence with no account required'
+    ],
     confirmClear: 'Delete all entries?',
     confirmDelete: 'Delete this entry?',
     deleteDescription: 'Deleted entries will be removed from this browser.',
