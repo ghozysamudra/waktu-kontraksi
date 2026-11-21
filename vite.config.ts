@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => {
           relative: false
         },
         prerender: {
-          entries: ['*', '/robots.txt', '/sitemap.xml']
+          entries: ['*', '/404', '/robots.txt', '/sitemap.xml', '/llms.txt', '/.well-known/ard.json']
         }
       })
     ]

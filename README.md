@@ -24,7 +24,7 @@ npm run build
 
 ## Konfigurasi URL produksi & SEO
 
-URL kanonis untuk tag Open Graph (`og:image`, `og:url`), `canonical`, `hreflang`, `sitemap.xml`, dan `robots.txt` dapat diatur melalui variabel lingkungan `PUBLIC_SITE_URL` saat build (bawaan: `https://waktu-kontraksi.pages.dev`):
+URL kanonis untuk tag Open Graph (`og:image`, `og:url`), `canonical`, `hreflang`, `sitemap.xml`, `robots.txt`, `llms.txt`, dan `/.well-known/ard.json` dapat diatur melalui variabel lingkungan `PUBLIC_SITE_URL` saat build (bawaan: `https://waktu-kontraksi.pages.dev`):
 
 ```sh
 PUBLIC_SITE_URL=https://domain-anda.com npm run build

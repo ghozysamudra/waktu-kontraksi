@@ -260,6 +260,7 @@
   <link rel="icon" type="image/png" sizes="96x96" href="/icon-96.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="ard" href="/.well-known/ard.json" />
 
   <link rel="preload" href={loraLatinFont} as="font" type="font/woff2" crossorigin="anonymous" />
   <link rel="preload" href={dmSansLatinFont} as="font" type="font/woff2" crossorigin="anonymous" />
